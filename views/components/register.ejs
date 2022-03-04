@@ -1,0 +1,39 @@
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-6 p-3 m-3 border border-info rounded">
+            <div class="m-3">Register Account</div><hr>
+            <form action="/register" method="POST">
+                <div class="mb-3 mt-3">
+                    <label for="role">Select Role:</label>
+                    <select name="role" id="role" class="form-control" required>
+                        <option value="">Select One</option>
+                        <option value="Student">Student</option>
+                        <option value="Employee">Employee</option>
+                        <option value="Faculty">Faculty</option>
+                        <option value="School">School</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="Email">Emial ID:</label>
+                    <input type="email" name="email" id="email" class="form-control" required> 
+                </div>
+                <div class="mb-3">
+                    <label for="mobile">Mobile Number</label>
+                    <input type="tel" name="mobile" id="mobile" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="username">Username:</label>
+                    <input type="text" class="form-control" name="username" id="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password">Password:</label>
+                    <input type="password" class="form-control" name="password" id="password" required>
+                </div>
+                <div class="mb-3">
+                    <button role="submit" type="button" class="btn btn-primary">Register</button>
+                </div>
+            </form>
+        </div>
+        
+    </div>
+</div>

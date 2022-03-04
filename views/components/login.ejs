@@ -1,0 +1,30 @@
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-6 p-3 m-3 border border-info rounded">
+            <form action="/login" method="POST">
+                <div class="mb-3 mt-3">
+                    <label for="role">Select Role:</label>
+                    <select name="role" id="role" class="form-control">
+                        <option value="">Select One</option>
+                        <option value="Student">Student</option>
+                        <option value="Employee">Employee</option>
+                        <option value="Faculty">Faculty</option>
+                        <option value="School">School</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="username">Username:</label>
+                    <input type="text" class="form-control" name="username" id="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password">Password:</label>
+                    <input type="password" class="form-control" name="password" id="password">
+                </div>
+                <div class="mb-3">
+                    <button role="submit" type="button" class="btn btn-primary">Login</button>
+                </div>
+            </form>
+        </div>
+        
+    </div>
+</div>
