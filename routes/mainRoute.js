@@ -9,7 +9,8 @@ const database = require('../configuration/database');
 const conn = database.connect();
 const pushMail = require('../configuration/email.settings');
 
-const {authentic} = require('../middlewares/auth');
+// const {authentic} = require('../middlewares/auth');
+const { check, validationResult } = require('express-validator');
 
 // User registration Page GET
 mainRouter.get('/register', (req, res) => {
@@ -17,12 +18,16 @@ mainRouter.get('/register', (req, res) => {
 })
 
 // User Registration POST
-mainRouter.post('/register', async (req, res) => {
+mainRouter.post('/register', [
+    check('email', 'Email is not valid.').isEmail(), check('username', 'Username should be lowercase.').isLowercase(), check('password', 'Password must be 8 characters in length and should contain special characters as well.').isLength({min: 8}).not().isLowercase().not().isUppercase().not().isNumeric().not().isAlpha(), check('mobile', 'Not a vaild Mobile number. Mobile number should be 10 characters in length.').isNumeric().isLength(10), check('role', 'Role cannot not be empty.').notEmpty()
+], async (req, res) => {
     try {
         const {role, email, mobile, username, password } = req.body;
-        
-        if(!(role && email && mobile && username && password)) {
-            res.status(400).send('Please fill all the fields');
+
+        const errors = validationResult(req);
+
+        if(!errors.isEmpty()) {
+            return res.status(400).json({errors: errors.array()})
         }
 
         // checking old user aka duplicate entry
@@ -91,6 +96,10 @@ mainRouter.post('/register-verify', async (req, res) => {
                     verify_status: "Verified",
                     }
                 })
+                const role = userAcc.role;
+                const token = jwt.sign({role, user_id}, process.env.TOKEN_KEY, {expiresIn: '2h'})
+                userAcc.token = token;
+                req.headers.authoization = token;
                 return res.status(201).json({status: 'success', msg: 'User verified.' })
             } else {
                 return res.json({status: 'Idle', msg: 'user already verified.'});
@@ -148,19 +157,22 @@ mainRouter.post('/login', async (req, res) => {
     try {
         const {role, username, password} = req.body;
         const oldUser = await User.find({role: role, username: username})
+        const user_id = oldUser[0]._id;
 
-        if (oldUser) {
+        if (oldUser && oldUser[0].verify_status == 'Verified') {
             const passMatch = bcrypt.compareSync(password, oldUser[0].password);
             if (passMatch) {
-                const token = jwt.sign({role, username}, process.env.TOKEN_KEY, {expiresIn: '2h'})
+                const token = jwt.sign({role, user_id}, process.env.TOKEN_KEY, {expiresIn: '2h'})
                 oldUser.token = token;
                 req.headers.authoization = token;
-                return res.json({status: 'success', msg: 'User has been logged in'});
+                return res.json({status: 'success', msg: 'User has been logged in', token});
             } else {
                 return res.json({status: 'fail', msg: 'No user match with the provided credential'});
             }
+        } else if (oldUser && oldUser[0].verify_status == 'Pending'){
+            return res.json({status: 'fail', msg: 'Your account not verified yet.'});
         } else {
-            return res.json({status: 'fail', msg: 'No user match with the provided credential'});
+            return res.json({status: 'fail', msg: 'No account found.'});
         }
     } catch (err) {
         console.log(err);
