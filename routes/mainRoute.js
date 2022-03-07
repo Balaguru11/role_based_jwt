@@ -9,6 +9,9 @@ const database = require('../configuration/database');
 const conn = database.connect();
 const pushMail = require('../configuration/email.settings');
 
+const auth = require('../middlewares/auth')
+
+
 // const {authentic} = require('../middlewares/auth');
 const { check, validationResult } = require('express-validator');
 
@@ -44,7 +47,7 @@ mainRouter.post('/register', [
         const hashedPass = bcrypt.hashSync(password, 10);
         
             const user = await User.create({
-                role, email, mobile, username, password: hashedPass, verify_g: verificationCode, verify_status: 'Pending'
+                role, email, mobile, username, password: hashedPass, verify_g: verificationCode, verify_status: 'Pending', deleted_at: 'Null'
             })
 
             user_id = user._id
@@ -84,7 +87,7 @@ mainRouter.post('/register-verify', async (req, res) => {
         
         const {user_id, verification_code} = req.body;
 
-        const userAcc = await User.findOne({_id: user_id})
+        const userAcc = await User.findOne({_id: user_id, deleted_at: 'Null'})
 
         if (userAcc) {
             const verify_gen = userAcc.verify_g;
@@ -99,7 +102,7 @@ mainRouter.post('/register-verify', async (req, res) => {
                 const role = userAcc.role;
                 const token = jwt.sign({role, user_id}, process.env.TOKEN_KEY, {expiresIn: '2h'})
                 userAcc.token = token;
-                req.headers.authoization = token;
+                req.headers.authorization = token;
                 return res.status(201).json({status: 'success', msg: 'User verified.' })
             } else {
                 return res.json({status: 'Idle', msg: 'user already verified.'});
@@ -117,7 +120,7 @@ mainRouter.post('/resend-verification-mail', async (req, res) => {
     try {
         const { user_id } = req.body;
 
-        const findUser = await User.findOne({_id: user_id})
+        const findUser = await User.findOne({_id: user_id, deleted_at: 'Null'})
         if (findUser){
             if (findUser.verify_status != 'Pending') {
                 return res.json({status: 'Idle', msg: 'Account already verified.'})
@@ -156,15 +159,15 @@ mainRouter.get('/login', (req, res) => {
 mainRouter.post('/login', async (req, res) => {
     try {
         const {role, username, password} = req.body;
-        const oldUser = await User.find({role: role, username: username})
-        const user_id = oldUser[0]._id;
+        const oldUser = await User.findOne({role: role, username: username, deleted_at: 'Null'})
 
-        if (oldUser && oldUser[0].verify_status == 'Verified') {
-            const passMatch = bcrypt.compareSync(password, oldUser[0].password);
+        if (oldUser && oldUser.verify_status == 'Verified') {
+            const user_id = oldUser._id;
+            const passMatch = bcrypt.compareSync(password, oldUser.password);
             if (passMatch) {
                 const token = jwt.sign({role, user_id}, process.env.TOKEN_KEY, {expiresIn: '2h'})
                 oldUser.token = token;
-                req.headers.authoization = token;
+                req.headers.authoization = token;                
                 return res.json({status: 'success', msg: 'User has been logged in', token});
             } else {
                 return res.json({status: 'fail', msg: 'No user match with the provided credential'});
@@ -180,8 +183,37 @@ mainRouter.post('/login', async (req, res) => {
 });
 
 // role based profile
-mainRouter.post('/my-profile', (req, res) => {
+mainRouter.post('/my-profile', auth, (req, res) => {
 
+})
+
+// Password Reset // working on this controller
+mainRouter.put('/reset-password', auth, [check('new_pwd', 'Password must be 8 characters in length and should contain special characters as well.').isLength({min: 8}).not().isLowercase().not().isUppercase().not().isNumeric().not().isAlpha()], async (req, res) => {
+    const user = req.user;
+
+    if(user){
+        const {new_pwd, newMatch_pwd} = req.body;
+        // const storedData = await User.find({_id: user.user_id })
+        // if(storedData) {
+            // let checkCurrentPwd = bcrypt.compareSync(current_pwd, storedData.password);
+
+            // if(!checkCurrentPwd){
+            //     return res.json({status: 'failure', msg: 'Password doesnot match'})
+            // }
+
+            if(new_pwd == newMatch_pwd) {
+                const changePwd = await User.findOneAndUpdate({_id: user.user_id}, {$set: {password: new_pwd}});
+                if(changePwd){
+                    return res.json({status: 'success', msg: 'Password changed successfully.'});
+                }
+                return res.json({status: 'failure', msg: 'Couldnt update the password at the moment.'})
+            }
+
+            return res.json({status: 'failure', msg: 'New password doesnt match'});
+        }
+    // }
+
+    return res.json({status: 'failure', msg: 'Please login', user})
 })
 
 // authentication for role based routes

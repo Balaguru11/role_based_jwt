@@ -7,7 +7,10 @@ const userSchema = new mongoose.Schema({
     username: { type: String, default: null, unique: true, lowercase: true},
     password: { type: String, default: null, minlength: 8 },
     verify_g: { type: String},
-    verify_status: { type: String, enum: ['Verified', 'Pending'], required: true}
+    verify_status: { type: String, enum: ['Verified', 'Pending'], required: true},
+    deleted_at: {type: String}
 })
+
+userSchema.set('timestamps', true);
 
 module.exports = mongoose.model('User', userSchema);

@@ -31,3 +31,17 @@ const PORT = process.env.PORT || 8080
 app.listen(8000, () => {
     console.log(`Project started at PORT ${PORT}`);
 });
+
+/*
+// 1. Login - Login completed
+// 2. Register - Register completed
+// 3. Register Verification - completed, 2 routes added (resent verification code)
+// 4 Password Reset - 
+// 5. Profile get
+// 6. Profile update
+// 7. Create a post - Create a Post by School, Staff and Employee. Student restricted to access this route.
+// 8. Update a post - Post can be updated by the user who created it. Students are not eligible to update Posts.
+// 9. Delete a post - Delete a Post can be possible only if the logged in user created the post.
+// 10. get All my posts - Done. (deleted posts not visible)
+
+*/

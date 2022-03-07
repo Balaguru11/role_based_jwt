@@ -2,8 +2,10 @@ const jwt = require('jsonwebtoken');
 const token_key = process.env.TOKEN_KEY;
 
 module.exports = async (req, res, next) => {
-    const token = req.header('x-auth-token');
-    console.log(token);
+    const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+    console.log(`Token is Here: ${token}`);
+    // const token = req.header('x-auth-token');
+    // console.log(token);
 
     if(!token) {
         return res.json({status: 'fail', msg: 'No token found'})
@@ -11,7 +13,7 @@ module.exports = async (req, res, next) => {
 
     try {
         let user = await jwt.verify(token, token_key);
-        console.log(user);
+        // console.log(user);
         req.user = user;
         next()
     } catch (err) {
