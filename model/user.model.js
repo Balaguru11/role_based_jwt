@@ -8,7 +8,12 @@ const userSchema = new mongoose.Schema({
     password: { type: String, default: null, minlength: 8 },
     verify_g: { type: String},
     verify_status: { type: String, enum: ['Verified', 'Pending'], required: true},
-    deleted_at: {type: String}
+    deleted_at: {type: String},
+    profile: {
+        social: {type: String, default: ''},
+        dob: {type: Date},
+        father_name: {type: String}
+    }
 })
 
 userSchema.set('timestamps', true);

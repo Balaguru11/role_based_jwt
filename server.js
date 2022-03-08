@@ -18,9 +18,12 @@ app.set("layout", "./layouts/main");
 app.set("view engine", "ejs");
 
 // routes
-const mainRoute = require('./routes/mainRoute');
+const authRoute = require('./routes/authRoute');
+const userRoute = require('./routes/userRoute')
 const postRoute = require('./routes/postsRoute');
-app.use('/main', mainRoute);
+
+app.use('/auth', authRoute);
+app.use('/user', userRoute);
 app.use('/post', postRoute);
 
 app.get('/', (req, res) => {
@@ -36,12 +39,14 @@ app.listen(8000, () => {
 // 1. Login - Login completed
 // 2. Register - Register completed
 // 3. Register Verification - completed, 2 routes added (resent verification code)
-// 4 Password Reset - 
-// 5. Profile get
-// 6. Profile update
+// 4 Password Reset - completed. Password can be changed for all users.
+// 5. Profile get - 
+// 6. Profile update - 
 // 7. Create a post - Create a Post by School, Staff and Employee. Student restricted to access this route.
 // 8. Update a post - Post can be updated by the user who created it. Students are not eligible to update Posts.
 // 9. Delete a post - Delete a Post can be possible only if the logged in user created the post.
 // 10. get All my posts - Done. (deleted posts not visible)
-
+Logout Route added.
 */
+
+// integrate with react

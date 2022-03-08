@@ -9,4 +9,8 @@ function authorize(roles = []){
     }
 }
 
-module.exports = authorize
+function reverseString(str) {
+    return str.split("").reverse().join("");
+}
+
+module.exports = {authorize, reverseString }

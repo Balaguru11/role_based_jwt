@@ -8,12 +8,9 @@ const jwt = require('jsonwebtoken');
 const database = require('../configuration/database');
 const conn = database.connect();
 const pushMail = require('../configuration/email.settings');
-
 const auth = require('../middlewares/auth')
-
-
-// const {authentic} = require('../middlewares/auth');
 const { check, validationResult } = require('express-validator');
+const {reverseString} = require('../helpers/authorize')
 
 // User registration Page GET
 mainRouter.get('/register', (req, res) => {
@@ -57,7 +54,7 @@ mainRouter.post('/register', [
                     from: process.env.MAIL_USERNAME,
                     to: email,
                     subject: "Verify Your Account",
-                    html: `<p>Your Verification Code is <b>${verificationCode}</b>. Please click on this <a href="./main/register-verify">link</a> to verify Now.</p>`
+                    html: `<p>Your Verification Code is <b>${verificationCode}</b>. Please click on this <a href="./auth/register-verify">link</a> to verify Now.</p>`
                 }).then(result => {
                     return res.status(200).json({status: 'success', msg: 'Verification Code has been sent to the registered email id.', user: user})
                 }).catch(err => {
@@ -68,6 +65,7 @@ mainRouter.post('/register', [
             }
     } catch (err) {
         console.log(err);
+        return res.json({status: 'error', message: 'We caught an error'});
     }
 })
 
@@ -78,15 +76,14 @@ mainRouter.get('/register-verify', (req, res) => {
         // return res.render('')
     } catch(err) {
         console.log(err);
+        return res.json({status: 'error', message: 'We caught an error'});
     }
 })
 
 // User Registration Verify email - POST
 mainRouter.post('/register-verify', async (req, res) => {
     try {
-        
         const {user_id, verification_code} = req.body;
-
         const userAcc = await User.findOne({_id: user_id, deleted_at: 'Null'})
 
         if (userAcc) {
@@ -112,6 +109,7 @@ mainRouter.post('/register-verify', async (req, res) => {
         }
     } catch (err) {
         console.log(err);
+        return res.json({status: 'error', message: 'We caught an error'});
     }
 })
 
@@ -147,6 +145,7 @@ mainRouter.post('/resend-verification-mail', async (req, res) => {
         }
     } catch (err) {
         console.log(err);
+        return res.json({status: 'error', message: 'We caught an error'});
     }
 })
 
@@ -160,10 +159,11 @@ mainRouter.post('/login', async (req, res) => {
     try {
         const {role, username, password} = req.body;
         const oldUser = await User.findOne({role: role, username: username, deleted_at: 'Null'})
-
+        console.log(oldUser);
         if (oldUser && oldUser.verify_status == 'Verified') {
             const user_id = oldUser._id;
             const passMatch = bcrypt.compareSync(password, oldUser.password);
+            console.log(`password: ${password} & OldUser Pwd: ${oldUser.password}, compared: ${passMatch}`)
             if (passMatch) {
                 const token = jwt.sign({role, user_id}, process.env.TOKEN_KEY, {expiresIn: '2h'})
                 oldUser.token = token;
@@ -172,48 +172,103 @@ mainRouter.post('/login', async (req, res) => {
             } else {
                 return res.json({status: 'fail', msg: 'No user match with the provided credential'});
             }
-        } else if (oldUser && oldUser[0].verify_status == 'Pending'){
+        } else if (oldUser && oldUser.verify_status == 'Pending'){
             return res.json({status: 'fail', msg: 'Your account not verified yet.'});
         } else {
             return res.json({status: 'fail', msg: 'No account found.'});
         }
     } catch (err) {
         console.log(err);
+        return res.json({status: 'error', message: 'We caught an error'});
     }
 });
 
-// role based profile
-mainRouter.post('/my-profile', auth, (req, res) => {
+// registered email >> verification code >> verifing code and useracc >> submission new pass, match pass.
+mainRouter.post('/forget-password', [check('email', 'Email is not valid').isEmail(), check('username', 'Username should be lowercase.').isLowercase()], async (req, res, next) => {
+    try {
+        const {email} = req.body;
+        const error = validationResult(req);
+        if (!error.isEmpty()) {
+            return res.json({status: 'failure', errors: error.array()})
+        }
 
+        const isAcc = await User.findOne({email: email, verify_status: 'Verified', deleted_at: 'Null'})
+        if (!isAcc) {
+            return res.json({status: 'failure', message: 'No Active account found with provided email id.'})
+        }
+        // hashing email and sending as url params
+        const reversedMail = reverseString(email);
+        const hasedVerifyCode = bcrypt.hashSync(reversedMail, 10) +'&&'+ isAcc._id;
+        const encodedHashCode = encodeURIComponent(hasedVerifyCode);
+        const emailVerify = await pushMail({
+            from: process.env.MAIL_USERNAME,
+            to: email,
+            subject: "Email Verification Code",
+            html: `<p>You requested for a password reset, kindly use <a href="./auth/reset-password/${encodedHashCode}">this link</a> to reset your password.</p>`
+        }).then(result => {
+            return res.json({status: 'success', message: 'Your email verification code has been sent.', encodedHashCode});
+        }).then(result => {
+            req.email = email;
+            next();
+        }).catch(err => {
+            return res.json({status: 'error', messsage: 'Error sending email verification code.', err})
+        })
+    } catch (error) {
+        console.log(error);
+        return res.json({status: 'error', message: 'We caught an error'});
+    }
 })
 
-// Password Reset // working on this controller
-mainRouter.put('/reset-password', auth, [check('new_pwd', 'Password must be 8 characters in length and should contain special characters as well.').isLength({min: 8}).not().isLowercase().not().isUppercase().not().isNumeric().not().isAlpha()], async (req, res) => {
-    const user = req.user;
+//verifying code and useracc
 
-    if(user){
-        const {new_pwd, newMatch_pwd} = req.body;
-        // const storedData = await User.find({_id: user.user_id })
-        // if(storedData) {
-            // let checkCurrentPwd = bcrypt.compareSync(current_pwd, storedData.password);
+mainRouter.get('/reset-password/:verify_code', async(req, res) => {
+    try {
+        const primaryString = decodeURIComponent(req.params.verify_code);
+        const user_id = primaryString.split("&&")[1];
+        const verifyUser = primaryString.split("&&")[0];
+        console.log(user_id, verifyUser);
 
-            // if(!checkCurrentPwd){
-            //     return res.json({status: 'failure', msg: 'Password doesnot match'})
-            // }
-
-            if(new_pwd == newMatch_pwd) {
-                const changePwd = await User.findOneAndUpdate({_id: user.user_id}, {$set: {password: new_pwd}});
-                if(changePwd){
-                    return res.json({status: 'success', msg: 'Password changed successfully.'});
-                }
-                return res.json({status: 'failure', msg: 'Couldnt update the password at the moment.'})
-            }
-
-            return res.json({status: 'failure', msg: 'New password doesnt match'});
+        const ifUser = await User.findById(user_id)
+        if(!ifUser) {
+            return res.json({status: 'error', message: 'You are not a valid user'});
         }
-    // }
+        const reverseEmail = reverseString(ifUser.email);
+        const compareHash = bcrypt.compareSync(verifyUser, reverseEmail);
 
-    return res.json({status: 'failure', msg: 'Please login', user})
+        if (!compareHash) {
+            return res.json({status: 'error', message: 'Url validation failed. Not a valid URL.'})
+        }
+
+        return res.json({status: 'success', message: 'Please enter your new password.'})
+    } catch (err) {
+        console.log(err);
+    }
+})
+
+mainRouter.post('/reset-password/:verify_code', [check('new_pwd', 'Password must be 8 characters in length and should contain special characters as well.').isLength({min: 8}).not().isLowercase().not().isUppercase().not().isNumeric().not().isAlpha()], async(req, res) => {
+    try {
+        const {new_pwd, new_match_pwd} = req.body;
+        const error = validationResult(req);
+        if(!error.isEmpty()) {
+            return res.json({status: 'error', error: error.array()})
+        }
+
+        const primaryString = req.params.verify_code;
+        const user_id = primaryString.split("&&")[1];
+
+        if (new_pwd == new_match_pwd) {
+            const updatePwd = await User.updateOne({_id: user_id, deleted_at: 'Null', verify_status: 'Verified'}, {$set: {password: new_pwd}});
+            if(updatePwd) {
+                return res.json({status: 'success', message: 'Kudos, Your Account Password has been updated.'})
+            }
+            return res.json({status: 'failure', message: 'We couldnt update the password at the moment.'})
+        }
+
+        return res.json({status: 'failure', message: 'New Password doesnt match with confirm password.'})
+
+    } catch (err) {
+        console.log(err);
+    }
 })
 
 // authentication for role based routes
