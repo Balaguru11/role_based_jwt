@@ -113,7 +113,6 @@ postsRouter.get('/public', async (req, res) => {
 postsRouter.get('/private', async (req, res) => {
     try {
         const user = req.user;
-        console.log(user);
         if(!user){
             let posts = await Posts.find({visibility: 'Public', deleted_at: 'Null'})
             if(posts.length > 0) {

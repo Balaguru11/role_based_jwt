@@ -159,11 +159,9 @@ mainRouter.post('/login', async (req, res) => {
     try {
         const {role, username, password} = req.body;
         const oldUser = await User.findOne({role: role, username: username, deleted_at: 'Null'})
-        console.log(oldUser);
         if (oldUser && oldUser.verify_status == 'Verified') {
             const user_id = oldUser._id;
             const passMatch = bcrypt.compareSync(password, oldUser.password);
-            console.log(`password: ${password} & OldUser Pwd: ${oldUser.password}, compared: ${passMatch}`)
             if (passMatch) {
                 const token = jwt.sign({role, user_id}, process.env.TOKEN_KEY, {expiresIn: '2h'})
                 oldUser.token = token;
@@ -183,6 +181,7 @@ mainRouter.post('/login', async (req, res) => {
     }
 });
 
+// FIRST TRY OF RESET PASSWORD 186 - 275
 // registered email >> verification code >> verifing code and useracc >> submission new pass, match pass.
 mainRouter.post('/forget-password', [check('email', 'Email is not valid').isEmail(), check('username', 'Username should be lowercase.').isLowercase()], async (req, res, next) => {
     try {
@@ -220,13 +219,11 @@ mainRouter.post('/forget-password', [check('email', 'Email is not valid').isEmai
 })
 
 //verifying code and useracc
-
 mainRouter.get('/reset-password/:verify_code', async(req, res) => {
     try {
         const primaryString = decodeURIComponent(req.params.verify_code);
         const user_id = primaryString.split("&&")[1];
         const verifyUser = primaryString.split("&&")[0];
-        console.log(user_id, verifyUser);
 
         const ifUser = await User.findById(user_id)
         if(!ifUser) {
@@ -242,6 +239,7 @@ mainRouter.get('/reset-password/:verify_code', async(req, res) => {
         return res.json({status: 'success', message: 'Please enter your new password.'})
     } catch (err) {
         console.log(err);
+        return res.json({status: 'error', message: 'We caught an error'});
     }
 })
 
@@ -268,10 +266,138 @@ mainRouter.post('/reset-password/:verify_code', [check('new_pwd', 'Password must
 
     } catch (err) {
         console.log(err);
+        return res.json({status: 'error', message: 'We caught an error'});
     }
 })
 
 // authentication for role based routes
 // my account
+
+// TRY 2 - SUPPORT DOC: https://www.smashingmagazine.com/2017/11/safe-password-resets-with-json-web-tokens/
+mainRouter.post('/forgot-password', [check('email', 'Email is not valid').isEmail(), check('username', 'Username should be lowercase.').isLowercase()], async (req, res, next) => { 
+    try {
+        const {email} = req.body;
+        const error = validationResult(req);
+        if(!error.isEmpty()) {
+            return res.json({status: 'failure', errors: error.array()})
+        }
+
+        const findAcc = await User.findOne({email: email, deleted_at: 'Null'})
+        if(!findAcc){
+            return res.json({status: 'failure', message: 'No Active account found with provided email id.'})
+        }
+
+        let payload = {id: findAcc._id, email: email}
+        const pwdResetSecret = findAcc.password + '-' + findAcc.createdAt.getTime();
+
+        const resetToken = jwt.sign(payload, pwdResetSecret);
+
+        const emailVerify = await pushMail({
+            from: process.env.MAIL_USERNAME,
+            to: email,
+            subject: "Email Verification Code",
+            html: `<p>You requested for a password reset, kindly use <a href="./auth/reset-password/${findAcc._id}/${resetToken}">this link</a> to reset your password.</p>`
+        }).then(result => {
+            return res.json({status: 'success', message: 'A link to Reset your account Password has been mailed to you.', resetToken});
+        }).then(result => {
+            req.email = email;
+            next();
+        }).catch(err => {
+            return res.json({status: 'error', messsage: 'Error sending email verification code.', err})
+        })
+    } catch (err) {
+        console.log(err);
+        return res.json({status: 'error', message: 'We caught an error'});
+    }
+})
+
+mainRouter.get('/reset-password/:user_id/:resetToken', async(req, res) => {
+    try {
+        const user_id = req.params.user_id;
+        const resetToken = req.params.resetToken;
+
+        const userAcc = await User.findOne({_id: user_id, deleted_at: 'Null'})
+
+        if(!userAcc) {
+            return res.json({status: 'error', message: 'You are not a valid user'});
+        }
+
+        const secretFromDb = userAcc.password + '-' + userAcc.createdAt.getTime();
+
+        jwt.verify(resetToken, secretFromDb, (err, response) => {
+            if(err){
+                return res.json({status: 'error', message: 'There is an error.', err, resetToken, secretFromDb})
+            } else if(response.id != user_id ) {
+                // console.log(response.id);
+                return res.json({status: 'failure', message: 'Invalid Reset Link'});
+            } else {
+                return res.json({status: 'success', message: 'User found. Please enter your New Password.'})
+            }
+        });
+    } catch (err) {
+        console.log(err);
+        return res.json({status: 'error', message: 'We caught an error'});
+    }
+})
+
+mainRouter.post('/reset-password/:user_id/:resetToken', [check('new_pwd', 'Password must be 8 characters in length and should contain special characters as well.').isLength({min: 8}).not().isLowercase().not().isUppercase().not().isNumeric().not().isAlpha()], async(req, res) => {
+    try {
+        const user_id = req.params.user_id;
+        const resetToken = req.params.resetToken;
+        const {new_pwd, new_match_pwd} = req.body;
+        const error = validationResult(req);
+        if(!error.isEmpty()) {
+            return res.json({status: 'error', error: error.array()})
+        }
+
+        const userAcc = await User.findOne({_id: user_id, deleted_at: 'Null' })
+        if(!userAcc){
+            return res.json({status: 'failure', message: 'User not found'})
+        }
+
+        const secretFromDb = userAcc.password + '-' + userAcc.createdAt.getTime();
+
+        var payload = jwt.verify(resetToken, secretFromDb);
+
+        if(!payload || !(payload.id == user_id) ) {
+            return res.json({status: 'failure', message: 'Invalid Reset Link'});
+        }
+
+        const compareOldAndNewPwd = bcrypt.compareSync(new_pwd, userAcc.password);
+
+        if(compareOldAndNewPwd) {
+            return res.json({status: 'failure', message: 'It seems you have used this Password already.'})
+        }
+
+        if(!(new_pwd == new_match_pwd)) {
+            return res.json({status: 'failure', message: 'New password and confirm password doesnot match.'});
+        }
+
+        const hashedNewPwd = bcrypt.hashSync(new_pwd, 10);
+        
+        const updatePwd = await User.updateOne({_id: user_id}, {$set: {password: hashedNewPwd}})
+        if(!updatePwd) {
+            return res.json({status: 'failure', message: 'Password not changed.'})
+        }
+        // Changing / reverting pwd change, from notification email
+        const pwdResetSecret = userAcc.password + '-' + userAcc.createdAt.getTime();
+        const newVerifyToken = jwt.sign(payload, pwdResetSecret);
+
+        // sending mail to registered mail id
+        const notifyPwdChange = await pushMail({
+            from: process.env.MAIL_USERNAME,
+            to: userAcc.email,
+            subject: 'Your Account Password Changed',
+            html: `<p>Your Password has been changed recently. If you didn't change the Password, please click <a href="./auth/reset-password/${userAcc._id}/${newVerifyToken}">this link</a> to revert or change the password again.</p>`
+        }).then(result => {
+            return res.json({status: 'success', message: 'Password has been changed successfully.'})
+        }).catch(err => {
+            return res.json({status: 'error', messsage: 'Email sending failed.', err})
+        })
+    } catch (err) {
+        console.log(err);
+        return res.json({status: 'error', message: 'We caught an error'});
+    }
+})
 
 module.exports = mainRouter;
