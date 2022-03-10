@@ -1,5 +1,7 @@
 const database = require('./configuration/database');
 const express = require('express');
+const path = require('path');
+
 const expressLayouts = require("express-ejs-layouts");
 const morgan = require('morgan');
 const cors = require('cors')
@@ -7,6 +9,22 @@ const cors = require('cors')
 require('dotenv').config();
 const conn = database.connect();
 const app = express();
+
+// file upload stuff
+const multer  = require('multer')
+// const upload = multer({ dest: './public/uploads/' })
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "./public/uploads");
+    },
+    filename: (req, file, cb) => {
+        console.log(file);
+        console.log(file.originalname);
+        cb(null, Date.now()+path.extname(file.originalname))
+    }
+})
+
+const upload = multer({storage: storage});
 
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());

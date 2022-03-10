@@ -10,10 +10,15 @@ const userSchema = new mongoose.Schema({
     verify_status: { type: String, enum: ['Verified', 'Pending'], required: true},
     deleted_at: {type: String},
     profile: {
-        social: {type: String, default: ''},
+        profile_pic: {type: String},
+        full_name: {type: String},
+        gender: {type: String, enum: ['Male', "Female", 'Trans-gender']},
         dob: {type: Date},
-        father_name: {type: String}
+        education: {type: String},
+        website: {type: String},
+        about_me: {type: String}
     }
+    
 })
 
 userSchema.set('timestamps', true);

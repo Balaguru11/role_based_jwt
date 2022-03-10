@@ -166,7 +166,7 @@ mainRouter.post('/login', async (req, res) => {
                 const token = jwt.sign({role, user_id}, process.env.TOKEN_KEY, {expiresIn: '2h'})
                 oldUser.token = token;
                 req.headers.authoization = token;                
-                return res.json({status: 'success', msg: 'User has been logged in', token});
+                return res.json({status: 'success', msg: 'User has been logged in', token}).redirect('/user/create-profile');
             } else {
                 return res.json({status: 'fail', msg: 'No user match with the provided credential'});
             }
@@ -176,7 +176,6 @@ mainRouter.post('/login', async (req, res) => {
             return res.json({status: 'fail', msg: 'No account found.'});
         }
     } catch (err) {
-        console.log(err);
         return res.json({status: 'error', message: 'We caught an error'});
     }
 });
@@ -379,8 +378,9 @@ mainRouter.post('/reset-password/:user_id/:resetToken', [check('new_pwd', 'Passw
         if(!updatePwd) {
             return res.json({status: 'failure', message: 'Password not changed.'})
         }
+
         // Changing / reverting pwd change, from notification email
-        const pwdResetSecret = userAcc.password + '-' + userAcc.createdAt.getTime();
+        const pwdResetSecret = new_pwd + '-' + userAcc.createdAt.getTime();
         const newVerifyToken = jwt.sign(payload, pwdResetSecret);
 
         // sending mail to registered mail id
