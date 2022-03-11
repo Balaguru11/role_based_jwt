@@ -176,7 +176,8 @@ mainRouter.post('/login', async (req, res) => {
             return res.json({status: 'fail', msg: 'No account found.'});
         }
     } catch (err) {
-        return res.json({status: 'error', message: 'We caught an error'});
+        console.log
+        // return res.json({status: 'error', message: 'We caught an error', err});
     }
 });
 

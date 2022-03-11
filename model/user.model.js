@@ -12,13 +12,12 @@ const userSchema = new mongoose.Schema({
     profile: {
         profile_pic: {type: String},
         full_name: {type: String},
-        gender: {type: String, enum: ['Male', "Female", 'Trans-gender']},
-        dob: {type: Date},
+        gender: {type: String, enum: ['Male', "Female", 'Transgender']},
+        dob: {type: String},
         education: {type: String},
         website: {type: String},
         about_me: {type: String}
-    }
-    
+    },
 })
 
 userSchema.set('timestamps', true);
