@@ -10,45 +10,44 @@ const auth = require('../middlewares/auth')
 const { check, validationResult } = require('express-validator');
 const multer  = require('multer');
 const path = require('path')
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "./public/uploads");
-    },
-    filename: (req, file, cb) => {
-        console.log(file);
-        // console.log(file.originalname);
-        cb(null, file.fieldname + '_' + Date.now()+path.extname(file.originalname))
-    }
-})
-const upload = multer({
-    storage: storage, 
-    limits: {
-        fileSize: 2000000
-    }
-});
-
-// const fs = require('fs');
-
-// const imageUpload = async(req, res, next) => {
-//     try {
-//         const path = '../public/uploads'+Date.now()+'.png'
-//         console.log(path);
-
-//         const imageData = req.body.avatar;
-//         const base64Data = imageData.replace(/^data:([A-Za-z-+/]+);base64,/, '');
-        
-//         fs.writeFileSync(path, base64Data,  {encoding: 'base64'});
-
-//         return res.send(path);
-//     } catch (err) {
-//         next(err);
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb(null, "./public/uploads");
+//     },
+//     filename: (req, file, cb) => {
+//         console.log(file);
+//         // console.log(file.originalname);
+//         cb(null, file.fieldname + '_' + Date.now()+path.extname(file.originalname))
 //     }
-// }
+// })
+// const upload = multer({
+//     storage: storage, 
+//     limits: {
+//         fileSize: 2000000
+//     }
+// });
+
+const fs = require('fs');
+
+const uploadImage = async(req, res, next) => {
+    try {
+        const path = '../public/uploads'+Date.now()+'.png'
+        console.log(path);
+
+        const imageData = req.body.avatar;
+        const base64Data = imageData.replace(/^data:([A-Za-z-+/]+);base64,/, '');
+        console.log(base64Data);
+
+        fs.writeFileSync(path, base64Data,  {encoding: 'base64'});
+        return res.send(path);
+    } catch (err) {
+        next(err);
+    }
+}
 
 // joi validator instead of express validator
 
 // profile get
-
 
 userRoute.get('/my-profile', auth, async(req, res) => {
     try {
@@ -73,7 +72,10 @@ userRoute.get('/my-profile', auth, async(req, res) => {
     }
 })
 
-userRoute.post('/create-profile', auth, upload.single('avatar'), [check('full_name', 'Please enter your name').not().isEmpty(), check('gender', 'Please Select your Gender').not().isEmpty(), check('dob', 'Enter Date of Birth.').not().isDate(), check('education', 'Fill your educational qualification').not().isEmpty(), check('about_me', 'Let us know more, say a few words about you').not().isEmpty() ], async (req, res) => {
+// upload image
+app.post('/upload-image', uploadImage)
+
+userRoute.post('/create-profile', auth, [check('full_name', 'Please enter your name').not().isEmpty(), check('gender', 'Please Select your Gender').not().isEmpty(), check('dob', 'Enter Date of Birth.').not().isDate(), check('education', 'Fill your educational qualification').not().isEmpty(), check('about_me', 'Let us know more, say a few words about you').not().isEmpty() ], async (req, res) => {
     try {
         const user = req.user;
         if(!user){
