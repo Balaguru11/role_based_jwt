@@ -1,32 +1,32 @@
-const database = require('./configuration/database');
-const express = require('express');
-const path = require('path');
+const database = require("./configuration/database");
+const express = require("express");
+const path = require("path");
 
 const expressLayouts = require("express-ejs-layouts");
-const morgan = require('morgan');
-const cors = require('cors')
+const morgan = require("morgan");
+const cors = require("cors");
 
-require('dotenv').config();
+require("dotenv").config();
 const conn = database.connect();
 const app = express();
 
 // file upload stuff
-const multer  = require('multer')
+const multer = require("multer");
 // const upload = multer({ dest: './public/uploads/' })
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "./public/uploads");
-    },
-    filename: (req, file, cb) => {
-        console.log(file);
-        console.log(file.originalname);
-        cb(null, Date.now()+path.extname(file.originalname))
-    }
-})
+  destination: (req, file, cb) => {
+    cb(null, "./public/uploads");
+  },
+  filename: (req, file, cb) => {
+    console.log(file);
+    console.log(file.originalname);
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
 
-const upload = multer({storage: storage});
+const upload = multer({ storage: storage });
 
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(morgan("tiny"));
 app.use(cors());
@@ -36,21 +36,21 @@ app.set("layout", "./layouts/main");
 app.set("view engine", "ejs");
 
 // routes
-const authRoute = require('./routes/authRoute');
-const userRoute = require('./routes/userRoute')
-const postRoute = require('./routes/postsRoute');
+const authRoute = require("./routes/authRoute");
+const userRoute = require("./routes/userRoute");
+const postRoute = require("./routes/postsRoute");
 
-app.use('/auth', authRoute);
-app.use('/user', userRoute);
-app.use('/post', postRoute);
+app.use("/auth", authRoute);
+app.use("/user", userRoute);
+app.use("/post", postRoute);
 
-app.get('/', (req, res) => {
-    console.log("Connected");
-})
+app.get("/", (req, res) => {
+  console.log("Connected");
+});
 
-const PORT = process.env.PORT || 8080
+const PORT = process.env.PORT || 8080;
 app.listen(8000, () => {
-    console.log(`Project started at PORT ${PORT}`);
+  console.log(`Project started at PORT ${PORT}`);
 });
 
 /*

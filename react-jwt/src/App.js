@@ -1,20 +1,27 @@
-import react from "react";
+import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Button, Modal } from "react-bootstrap";
+// import { Button, Modal } from "react-bootstrap";
+import { Route, Routes } from "react-router-dom";
 
 //importing created components here
-import Post from "./components/Post";
+// import Post from "./components/Post";
+import MainNavigation from "./components/layouts/MainNavigation";
+
+//importing pages here
+import AllPostsPage from "./pages/AllPosts";
+import MyPostsPage from "./pages/MyPosts";
+import NewPostsPage from "./pages/NewPost";
 
 function App() {
   return (
-    <div className="App m-5">
-      <h1 className="display-6">
-        <b>All Posts</b>
-      </h1>
-      <div className="row">
-        <Post text="My First Post" desc="My first Description" />
-        <Post text="My Second Post" desc="My Second Description" />
-        <Post text="My Thrid Post" desc="My Thrid Description" />
+    <div className="App container-fluid mb-3">
+      <MainNavigation />
+      <div className="m-5">
+        <Routes>
+          <Route path="/" element={<AllPostsPage />} />
+          <Route path="/my-posts" element={<MyPostsPage />} />
+          <Route path="/create-post" element={<NewPostsPage />} />
+        </Routes>
       </div>
     </div>
   );
