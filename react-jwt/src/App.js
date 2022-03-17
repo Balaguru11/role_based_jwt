@@ -11,16 +11,18 @@ import MainNavigation from "./components/layouts/MainNavigation";
 import AllPostsPage from "./pages/AllPosts";
 import MyPostsPage from "./pages/MyPosts";
 import NewPostsPage from "./pages/NewPost";
+import RegisterPage from "./pages/RegisterPage";
 
 function App() {
   return (
     <div className="App container-fluid mb-3">
       <MainNavigation />
-      <div className="m-5">
+      <div className="m-1">
         <Routes>
           <Route path="/" element={<AllPostsPage />} />
           <Route path="/my-posts" element={<MyPostsPage />} />
           <Route path="/create-post" element={<NewPostsPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Routes>
       </div>
     </div>

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 function MainNavigation() {
   return (
-    <header>
+    <>
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark px-3">
         <Link className="navbar-brand" to="/">
           Logo Here
@@ -42,7 +42,7 @@ function MainNavigation() {
           </ul>
         </div>
       </nav>
-    </header>
+    </>
   );
 }
 

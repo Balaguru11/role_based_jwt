@@ -172,7 +172,8 @@ postsRouter.get("/public", async (req, res) => {
       msg: "No Post available to display.",
     });
   } catch (err) {
-    return res.json({ status: "error", message: "We caught an error" });
+    console.log(err);
+    // return res.json({ status: "error", message: "We caught an error" });
   }
 });
 

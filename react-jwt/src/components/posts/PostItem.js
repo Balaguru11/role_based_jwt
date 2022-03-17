@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Modal } from "react-bootstrap";
+import { Button, Modal, Card } from "react-bootstrap";
 
 function Post(props) {
   const [deleteModal, setDeleteModal] = useState(false);
@@ -23,22 +23,27 @@ function Post(props) {
 
   return (
     <>
-      <div className="card p-1 m-2 rounded">
-        <div className="card-body">
-          <h3 className="card-title">{props.title}</h3>
-          <h6 className="card-subtitle mb-2 text-muted">
-            Visibility: {props.visibility}
-          </h6>
-          <p className="card-text">Description: {props.description}</p>
-          <div>
-            <button className="btn btn-secondary mx-1" onClick={viewHandler}>
+      <div className="col-lg-4 col-md-6 col-sm-6 col-xs-10 p-1">
+        <Card key={props._id} className="p-2 m-2 rounded shadow">
+          <Card.Body>
+            <Card.Title>{props.title}</Card.Title>
+            <Card.Subtitle className="mt-4">
+              Visibility: {props.visibility}
+            </Card.Subtitle>
+            <hr />
+            <Card.Text>{props.description}</Card.Text>
+            <Button variant="primary" className="mx-1" onClick={viewHandler}>
               View
-            </button>
-            <button className="btn btn-danger" onClick={deleteButtonHandler}>
+            </Button>
+            <Button
+              variant="danger"
+              className="mx-1"
+              onClick={deleteButtonHandler}
+            >
               Delete
-            </button>
-          </div>
-        </div>
+            </Button>
+          </Card.Body>
+        </Card>
       </div>
       {/* delete Modal */}
       <Modal show={deleteModal} onHide={closeDeleteModal}>

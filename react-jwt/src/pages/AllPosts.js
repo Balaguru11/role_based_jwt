@@ -1,6 +1,6 @@
-import React from "react";
-
+import React, { useState, useEffect } from "react";
 import PostList from "../components/posts/PostList";
+import axios from "axios";
 
 const dummy = [
   {
@@ -17,14 +17,48 @@ const dummy = [
     content: "content 2",
     visibility: "private",
   },
+  {
+    id: "3",
+    title: "title 3",
+    description: "desc 3",
+    content: "content 3",
+    visibility: "private",
+  },
 ];
 
 function AllPostsPage(props) {
+  const [Posts, setPosts] = useState([]);
+
+  const base_url = "http://localhost:8000";
+  // const getAllPosts = () => {
+  //   axios
+  //     .get(`${base_url}/post/public`)
+  //     .then((res) => {
+  //       setPosts(res.data.posts);
+  //     })
+  //     .catch((err) => {
+  //       console.log(err);
+  //     });
+  // };
+
+  useEffect(() => {
+    // getAllPosts();
+    axios
+      .get(`${base_url}/post/public`)
+      .then((res) => {
+        setPosts(res.data.posts);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
   return (
-    <div>
-      <p>All Posts</p>
-      <PostList postData={dummy} />
-    </div>
+    <>
+      <div className="row m-3 pt-3">
+        <p>All Posts</p>
+        <PostList postData={Posts} />
+      </div>
+    </>
   );
 }
 
