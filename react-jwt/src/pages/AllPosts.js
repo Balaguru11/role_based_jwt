@@ -55,7 +55,7 @@ function AllPostsPage(props) {
   return (
     <>
       <div className="row m-3 pt-3">
-        <p>All Posts</p>
+        <p>All Public and Private Posts</p>
         <PostList postData={Posts} />
       </div>
     </>
