@@ -10,7 +10,16 @@ function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const registerRequest = {
+  function RegisterHandler(event) {
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    setValidated(true);
+  }
+
+  let registerRequest = {
     role: role,
     email: email,
     mobile: mobile,
@@ -18,30 +27,20 @@ function Register() {
     password: password,
   };
 
-  function RegisterHandler(event) {
-    const form = event.currentTarget;
-    if (form.checkValidity() === false) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    console.log(registerRequest);
-    event.preventDefault();
-    setValidated(true);
-    useEffect(() => {
-      axios
-        .post("http://localhost:8000/auth/register", registerRequest)
-        .then((res) => {
-          console.log(res);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }, []);
-  }
+  useEffect(() => {
+    axios
+      .post("http://localhost:8000/auth/register", registerRequest)
+      .then((res) => {
+        console.log(`${res} Created`);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, [validated]);
 
   return (
     <Form noValidate validated={validated} onSubmit={RegisterHandler}>
-      <Form.Group className="mb-3" controlId="role">
+      <Form.Group controlId="role">
         <Form.Label>Role:</Form.Label>
         <Form.Select
           aria-label="role"
@@ -58,7 +57,7 @@ function Register() {
           <option value="School">School</option>
         </Form.Select>
       </Form.Group>
-      <Form.Group>
+      <Form.Group controlId="username">
         <Form.Label>Username:</Form.Label>
         <Form.Control
           type="text"
@@ -70,7 +69,7 @@ function Register() {
           }}
         />
       </Form.Group>
-      <Form.Group>
+      <Form.Group controlId="password">
         <Form.Label>Password:</Form.Label>
         <Form.Control
           type="password"
@@ -86,7 +85,7 @@ function Register() {
           lower and special characters.
         </Form.Control.Feedback>
       </Form.Group>
-      <Form.Group>
+      <Form.Group controlId="email">
         <Form.Label>Email Id:</Form.Label>
         <Form.Control
           type="email"
@@ -101,7 +100,7 @@ function Register() {
           Email Id is not valid.
         </Form.Control.Feedback>
       </Form.Group>
-      <Form.Group>
+      <Form.Group controlId="mobile">
         <Form.Label>Mobile Number:</Form.Label>
         <Form.Control
           type="tel"

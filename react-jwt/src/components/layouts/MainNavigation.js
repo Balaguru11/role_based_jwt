@@ -39,6 +39,11 @@ function MainNavigation() {
                 Add New Post
               </Link>
             </li>
+            <li>
+              <Link className="nav-link" to="/register">
+                Register
+              </Link>
+            </li>
           </ul>
         </div>
       </nav>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Button, Modal, Card } from "react-bootstrap";
+import PropTypes from "prop-types";
 
 function Post(props) {
   const [deleteModal, setDeleteModal] = useState(false);
@@ -65,5 +66,19 @@ function Post(props) {
     </>
   );
 }
+
+Post.propTypes = {
+  title: PropTypes.string,
+  description: PropTypes.string,
+  visibility: PropTypes.string,
+  _id: PropTypes.string,
+};
+
+Post.defaultProps = {
+  title: "Dummy Post",
+  desctiption: "Dummy Desc",
+  visibility: "Public",
+  _id: "00",
+};
 
 export default Post;

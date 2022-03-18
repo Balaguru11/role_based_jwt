@@ -1,5 +1,6 @@
 import React from "react";
 import Post from "./PostItem";
+import PropTypes from "prop-types";
 
 function PostList(props) {
   return (
@@ -18,5 +19,9 @@ function PostList(props) {
     </>
   );
 }
+
+PostList.propTypes = {
+  postData: PropTypes.object,
+};
 
 export default PostList;
