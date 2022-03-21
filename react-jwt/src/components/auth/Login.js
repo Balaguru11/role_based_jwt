@@ -3,71 +3,57 @@ import React, { useState } from "react";
 import { Form, Button, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
-function Register() {
+function Login(props) {
   const navigate = useNavigate();
+
   const [validated, setValidated] = useState(false);
   const [role, setRole] = useState("");
-  const [email, setEmail] = useState("");
-  const [mobile, setMobile] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [alertShow, setAtertShow] = useState(false);
+  const [alertShow, setAlertShow] = useState(false);
 
-  function RegisterHandler(event) {
-    const form = event.currentTarget;
-    if (form.checkValidity() === false) {
+  function LoginHandler(event) {
+    const loginForm = event.currentTarget;
+    if (loginForm.checkValidity() === false) {
       event.preventDefault();
       event.stopPropagation();
     } else {
       event.preventDefault();
       setValidated(true);
-      call();
-      return true;
+      axios
+        .post("http://localhost:8000/auth/login", loginUser)
+        .then((res) => {
+          if (res.data.status == "fail" || "error") {
+            setError(res.data.msg);
+            setAlertShow(true);
+          } else {
+            setSuccess(res.data.msg);
+            setAlertShow(true);
+            navigate("/");
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
   }
 
-  const call = () => {
-    axios
-      .post("http://localhost:8000/auth/register", registerRequest)
-      .then((res) => {
-        if (res.data.status === "fail" || "error") {
-          setError(res.data.msg);
-          setAtertShow(true);
-          navigate("/register-verify");
-        } else if (res.data.status === "success") {
-          setSuccess(res.data.msg);
-          setAtertShow(true);
-          navigate("/register-verify");
-        } else {
-          console.log(res);
-          setAtertShow(true);
-          setError(res.errors[0].msg);
-        }
-      })
-      .catch((err) => {
-        setError(err.message);
-        setAtertShow(true);
-      });
-  };
-
-  let registerRequest = {
-    role: role,
-    email: email,
-    mobile: mobile,
-    username: username,
-    password: password,
-  };
-
   function dismissAlert() {
-    setAtertShow(false);
+    setAlertShow(false);
     setError("");
     // setSuccess("");
   }
 
+  let loginUser = {
+    role: role,
+    username: username,
+    password: password,
+  };
+
   return (
-    <Form noValidate validated={validated} onSubmit={RegisterHandler}>
+    <Form noValidate validated={validated} onSubmit={LoginHandler}>
       {error && (
         <Alert variant="danger" onClick={dismissAlert} dismissible>
           <Alert.Heading>{error}</Alert.Heading>
@@ -88,12 +74,15 @@ function Register() {
             setRole(e.target.value);
           }}
         >
-          <option>--Select One--</option>
+          <option value="">Select One</option>
           <option value="Student">Student</option>
           <option value="Faculty">Faculty</option>
           <option value="Employee">Employee</option>
           <option value="School">School</option>
         </Form.Select>
+        <Form.Control.Feedback type="invalid">
+          Select An User Role.
+        </Form.Control.Feedback>
       </Form.Group>
       <Form.Group controlId="username" className="mb-3">
         <Form.Label>Username:</Form.Label>
@@ -106,6 +95,9 @@ function Register() {
             setUsername(e.target.value);
           }}
         />
+        <Form.Control.Feedback type="invalid">
+          Username shouls not be blank.
+        </Form.Control.Feedback>
       </Form.Group>
       <Form.Group controlId="password" className="mb-3">
         <Form.Label>Password:</Form.Label>
@@ -119,45 +111,14 @@ function Register() {
           }}
         />
         <Form.Control.Feedback type="invalid">
-          Password should be 8 characters in length and should contain upper,
-          lower and special characters.
-        </Form.Control.Feedback>
-      </Form.Group>
-      <Form.Group controlId="email" className="mb-3">
-        <Form.Label>Email Id:</Form.Label>
-        <Form.Control
-          type="email"
-          placeholder="Enter email"
-          required
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-          }}
-        />
-        <Form.Control.Feedback type="invalid">
-          Email Id is not valid.
-        </Form.Control.Feedback>
-      </Form.Group>
-      <Form.Group controlId="mobile" className="mb-3">
-        <Form.Label>Mobile Number:</Form.Label>
-        <Form.Control
-          type="tel"
-          placeholder="Enter a valid 10 Digit Mobile No."
-          required
-          value={mobile}
-          onChange={(e) => {
-            setMobile(e.target.value);
-          }}
-        />
-        <Form.Control.Feedback type="invalid">
-          Please provide a valid 10 Digit Mobile Number.
+          Password should be entered.
         </Form.Control.Feedback>
       </Form.Group>
       <Button variant="primary" type="submit">
-        Register
+        Login
       </Button>
     </Form>
   );
 }
 
-export default Register;
+export default Login;

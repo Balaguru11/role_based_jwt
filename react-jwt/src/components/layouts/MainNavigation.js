@@ -44,6 +44,16 @@ function MainNavigation() {
                 Register
               </Link>
             </li>
+            <li>
+              <Link className="nav-link" to="/login">
+                Login
+              </Link>
+            </li>
+            <li>
+              <Link className="nav-link" to="/register-verify">
+                Verification
+              </Link>
+            </li>
           </ul>
         </div>
       </nav>

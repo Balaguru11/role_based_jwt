@@ -51,7 +51,7 @@ mainRouter.post(
       const errors = validationResult(req);
 
       if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.json({ status: "validation", errors: errors.array() });
       }
 
       // checking old user aka duplicate entry
@@ -94,23 +94,21 @@ mainRouter.post(
           html: `<p>Your Verification Code is <b>${verificationCode}</b>. Please click on this <a href="./auth/register-verify">link</a> to verify Now.</p>`,
         })
           .then((result) => {
-            return res
-              .status(200)
-              .json({
-                status: "success",
-                msg: "Verification Code has been sent to the registered email id.",
-                user: user,
-              });
+            return res.json({
+              status: "success",
+              msg: "Verification Code has been sent to the registered email id.",
+              user: user,
+            });
           })
           .catch((err) => {
             return res.json({
-              status: "failure",
+              status: "fail",
               msg: "Error sending verification code email.",
             });
           });
       } else {
         return res.json({
-          status: "failure",
+          status: "fail",
           msg: "Error sending verification code email.",
         });
       }
@@ -144,7 +142,7 @@ mainRouter.post("/register-verify", async (req, res) => {
         if (verify_gen != verification_code) {
           return res
             .status(401)
-            .json({ status: "failure", msg: "User Verification failed." });
+            .json({ status: "fail", msg: "User Verification failed." });
         }
         const verifyUpdate = await User.updateOne(
           { _id: user_id },
@@ -169,7 +167,7 @@ mainRouter.post("/register-verify", async (req, res) => {
     } else {
       return res
         .status(401)
-        .json({ status: "failure", msg: "There is no user found" });
+        .json({ status: "fail", msg: "There is no user found" });
     }
   } catch (err) {
     console.log(err);
@@ -211,28 +209,23 @@ mainRouter.post("/resend-verification-mail", async (req, res) => {
           })
           .catch((err) => {
             return res.json({
-              status: "failure",
+              status: "fail",
               msg: "Error sending verification code email.",
             });
           });
       } else {
         return res.json({
-          status: "failure",
+          status: "fail",
           msg: "There is an error while creating a new verification code.",
         });
       }
     } else {
-      return res.json({ status: "failure", msg: "Not a valid user." });
+      return res.json({ status: "fail", msg: "Not a valid user." });
     }
   } catch (err) {
     console.log(err);
     return res.json({ status: "error", message: "We caught an error" });
   }
-});
-
-// User Login - GET
-mainRouter.get("/login", (req, res) => {
-  return res.render("components/login");
 });
 
 // User Login - POST
@@ -289,7 +282,7 @@ mainRouter.post(
       const { email } = req.body;
       const error = validationResult(req);
       if (!error.isEmpty()) {
-        return res.json({ status: "failure", errors: error.array() });
+        return res.json({ status: "fail", errors: error.array() });
       }
 
       const isAcc = await User.findOne({
@@ -299,7 +292,7 @@ mainRouter.post(
       });
       if (!isAcc) {
         return res.json({
-          status: "failure",
+          status: "fail",
           message: "No Active account found with provided email id.",
         });
       }
@@ -410,13 +403,13 @@ mainRouter.post(
           });
         }
         return res.json({
-          status: "failure",
+          status: "fail",
           message: "We couldnt update the password at the moment.",
         });
       }
 
       return res.json({
-        status: "failure",
+        status: "fail",
         message: "New Password doesnt match with confirm password.",
       });
     } catch (err) {
@@ -441,13 +434,13 @@ mainRouter.post(
       const { email } = req.body;
       const error = validationResult(req);
       if (!error.isEmpty()) {
-        return res.json({ status: "failure", errors: error.array() });
+        return res.json({ status: "fail", errors: error.array() });
       }
 
       const findAcc = await User.findOne({ email: email, deleted_at: "Null" });
       if (!findAcc) {
         return res.json({
-          status: "failure",
+          status: "fail",
           message: "No Active account found with provided email id.",
         });
       }
@@ -514,7 +507,7 @@ mainRouter.get("/reset-password/:user_id/:resetToken", async (req, res) => {
         });
       } else if (response.id != user_id) {
         // console.log(response.id);
-        return res.json({ status: "failure", message: "Invalid Reset Link" });
+        return res.json({ status: "fail", message: "Invalid Reset Link" });
       } else {
         return res.json({
           status: "success",
@@ -557,7 +550,7 @@ mainRouter.post(
 
       const userAcc = await User.findOne({ _id: user_id, deleted_at: "Null" });
       if (!userAcc) {
-        return res.json({ status: "failure", message: "User not found" });
+        return res.json({ status: "fail", message: "User not found" });
       }
 
       const secretFromDb = userAcc.password + "-" + userAcc.createdAt.getTime();
@@ -565,21 +558,21 @@ mainRouter.post(
       var payload = jwt.verify(resetToken, secretFromDb);
 
       if (!payload || !(payload.id == user_id)) {
-        return res.json({ status: "failure", message: "Invalid Reset Link" });
+        return res.json({ status: "fail", message: "Invalid Reset Link" });
       }
 
       const compareOldAndNewPwd = bcrypt.compareSync(new_pwd, userAcc.password);
 
       if (compareOldAndNewPwd) {
         return res.json({
-          status: "failure",
+          status: "fail",
           message: "It seems you have used this Password already.",
         });
       }
 
       if (!(new_pwd == new_match_pwd)) {
         return res.json({
-          status: "failure",
+          status: "fail",
           message: "New password and confirm password doesnot match.",
         });
       }
@@ -592,7 +585,7 @@ mainRouter.post(
       );
       if (!updatePwd) {
         return res.json({
-          status: "failure",
+          status: "fail",
           message: "Password not changed.",
         });
       }

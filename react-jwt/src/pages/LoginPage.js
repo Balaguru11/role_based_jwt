@@ -1,19 +1,19 @@
 import React from "react";
-import Register from "../components/auth/Register";
+import Login from "../components/auth/Login";
 import { Row, Col } from "react-bootstrap";
 
-function RegisterPage() {
+function LoginPage() {
   return (
     <>
       <Row className="pt-3 justify-content-md-center">
         <Col md="5">
-          <h3>Registration</h3>
+          <h3>User Login</h3>
           <hr />
-          <Register />
+          <Login />
         </Col>
       </Row>
     </>
   );
 }
 
-export default RegisterPage;
+export default LoginPage;

@@ -12,6 +12,8 @@ import AllPostsPage from "./pages/AllPosts";
 import MyPostsPage from "./pages/MyPosts";
 import NewPostsPage from "./pages/NewPost";
 import RegisterPage from "./pages/RegisterPage";
+import LoginPage from "./pages/LoginPage";
+import AccVerificationPage from "./pages/AccVerificationPage";
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
           <Route path="/my-posts" element={<MyPostsPage />} />
           <Route path="/create-post" element={<NewPostsPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register-verify" element={<AccVerificationPage />} />
         </Routes>
       </div>
     </div>

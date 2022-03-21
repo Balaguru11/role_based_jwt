@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Button, Modal, Card } from "react-bootstrap";
-import PropTypes from "prop-types";
+import { Button, Modal, Card } from "react-bootstrap"; //
+import PropTypes from "prop-types"; //
 
 function Post(props) {
   const [deleteModal, setDeleteModal] = useState(false);
@@ -82,3 +82,9 @@ Post.defaultProps = {
 };
 
 export default Post;
+
+// authentication from today
+// register ct
+// email verification ct
+// login route
+// Home Page
