@@ -247,7 +247,12 @@ mainRouter.post("/login", async (req, res) => {
         oldUser.token = token;
         req.headers.authoization = token;
         return res
-          .json({ status: "success", msg: "User has been logged in", token })
+          .json({
+            status: "success",
+            msg: "User has been logged in",
+            token,
+            oldUser,
+          })
           .redirect("/user/create-profile");
       } else {
         return res.json({

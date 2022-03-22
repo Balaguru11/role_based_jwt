@@ -11,7 +11,7 @@ function CreatePost() {
   const [featured_image, setFeaturedImage] = useState("");
   const [images, setImages] = useState([]);
   const [visibility, setVisibility] = useState(true);
-  const [validated, setValidated] = useState(false);
+  const [createPostFormValidated, setCreatePostFormValidated] = useState(false);
 
   function AddNewPost(e) {
     const validate = e.currentTarget;
@@ -19,10 +19,9 @@ function CreatePost() {
       e.preventDefault();
       e.setDescription();
     }
-    setValidated(true);
+    setCreatePostFormValidated(true);
   }
   let newPostData = { title, description, content, visibility };
-  console.log(newPostData);
   useEffect(() => {
     axios
       .post("http://localhost:8000/post/create-post", newPostData)
@@ -32,11 +31,15 @@ function CreatePost() {
       .catch((err) => {
         console.log(err);
       });
-  }, [validated]);
+  }, [createPostFormValidated]);
 
   return (
     <>
-      <Form noValidate validated={validated} onSubmit={AddNewPost}>
+      <Form
+        noValidate
+        validated={createPostFormValidated}
+        onSubmit={AddNewPost}
+      >
         <Form.Group controlId="title" className="mb-3">
           <Form.Label>Post Title:</Form.Label>
           <Form.Control

@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { Form, Button, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
+import { saveTokenToLocalStorage, setLogoutTimer } from "../helpers/authHelper";
+
 function Login(props) {
   const navigate = useNavigate();
 
@@ -25,13 +27,17 @@ function Login(props) {
       axios
         .post("http://localhost:8000/auth/login", loginUser)
         .then((res) => {
-          if (res.data.status == "fail" || "error") {
+          if (res.data.status !== "success") {
             setError(res.data.msg);
             setAlertShow(true);
           } else {
+            console.log(res);
             setSuccess(res.data.msg);
             setAlertShow(true);
-            navigate("/");
+            saveTokenToLocalStorage(res.data.token);
+            // setLogoutTimer(res.data.token);
+            // localStorage.setItem("userToken", JSON.stringify(res.data.token));
+            navigate("/my-posts");
           }
         })
         .catch((err) => {
@@ -43,7 +49,7 @@ function Login(props) {
   function dismissAlert() {
     setAlertShow(false);
     setError("");
-    // setSuccess("");
+    setSuccess("");
   }
 
   let loginUser = {

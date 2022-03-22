@@ -35,20 +35,21 @@ function Register() {
         if (res.data.status === "fail" || "error") {
           setError(res.data.msg);
           setAtertShow(true);
-          navigate("/register-verify");
+          // navigate("/register-verify");
         } else if (res.data.status === "success") {
           setSuccess(res.data.msg);
           setAtertShow(true);
           navigate("/register-verify");
         } else {
-          console.log(res);
+          // console.log(res);
           setAtertShow(true);
           setError(res.errors[0].msg);
         }
       })
       .catch((err) => {
-        setError(err.message);
-        setAtertShow(true);
+        console.log(err);
+        // setError(err.message);
+        // setAtertShow(true);
       });
   };
 
@@ -63,7 +64,7 @@ function Register() {
   function dismissAlert() {
     setAtertShow(false);
     setError("");
-    // setSuccess("");
+    setSuccess("");
   }
 
   return (
