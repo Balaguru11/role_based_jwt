@@ -42,7 +42,7 @@ mainRouter.post(
     )
       .isNumeric()
       .isLength(10),
-    check("role", "Role cannot not be empty.").notEmpty(),
+    check("role", "Role cannot not be empty.").notEmpty().isLength({ min: 2 }),
   ],
   async (req, res) => {
     try {
@@ -261,6 +261,7 @@ mainRouter.post("/login", async (req, res) => {
         });
       }
     } else if (oldUser && oldUser.verify_status == "Pending") {
+      // create verification code and send .. link verification page /user_id
       return res.json({
         status: "fail",
         msg: "Your account not verified yet.",

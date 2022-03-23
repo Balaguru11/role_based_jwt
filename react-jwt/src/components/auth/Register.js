@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useState } from "react";
 import { Form, Button, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import AccVerificationPage from "../../pages/AccVerificationPage";
 
 function Register() {
   const navigate = useNavigate();
@@ -32,24 +33,31 @@ function Register() {
     axios
       .post("http://localhost:8000/auth/register", registerRequest)
       .then((res) => {
-        if (res.data.status === "fail" || "error") {
+        if (res.data.status !== "success" && res.data.status !== "validation") {
+          console.log(res);
           setError(res.data.msg);
           setAtertShow(true);
           // navigate("/register-verify");
-        } else if (res.data.status === "success") {
+        } else if (
+          res.data.status !== "success" &&
+          res.data.status === "validation"
+        ) {
+          console.log(res);
+          setError(res.data.errors[0].msg);
+          setAtertShow(true);
+          // navigate("/register-verify");
+        } else {
           setSuccess(res.data.msg);
           setAtertShow(true);
-          navigate("/register-verify");
-        } else {
-          // console.log(res);
-          setAtertShow(true);
-          setError(res.errors[0].msg);
+          return <AccVerificationPage user_id={res.data.user._id} />;
+          // navigate("/register-verify");
+          //useContext();
         }
       })
       .catch((err) => {
         console.log(err);
-        // setError(err.message);
-        // setAtertShow(true);
+        setError(err.response.data.message);
+        setAtertShow(true);
       });
   };
 
@@ -89,12 +97,17 @@ function Register() {
             setRole(e.target.value);
           }}
         >
-          <option>--Select One--</option>
+          <option value="" disabled>
+            --Select One--
+          </option>
           <option value="Student">Student</option>
           <option value="Faculty">Faculty</option>
           <option value="Employee">Employee</option>
           <option value="School">School</option>
         </Form.Select>
+        <Form.Control.Feedback type="invalid">
+          Please Select your role.
+        </Form.Control.Feedback>
       </Form.Group>
       <Form.Group controlId="username" className="mb-3">
         <Form.Label>Username:</Form.Label>

@@ -42,7 +42,6 @@ function AllPostsPage(props) {
   // };
 
   useEffect(() => {
-    // getAllPosts();
     axios
       .get(`${base_url}/post/public`)
       // .then((res) => res.json())
